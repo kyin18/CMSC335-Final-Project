@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Add New Task</h1>
+            <div class="header-actions">
+                <a href="/" class="btn btn-secondary">Home</a>
+                <a href="/tasks" class="btn btn-secondary">View Tasks</a>
+            </div>
+        </header>
+
+        <% if (error) { %>
+            <div class="alert error">
+                <strong>Error:</strong> <%= error %>
+            </div>
+        <% } %>
+
+        <form action="/add" method="POST" class="task-form">
+            <div class="form-group">
+                <label for="activity">Activity / Task *</label>
+                <input type="text" id="activity" name="activity" required 
+                       placeholder="What do you need to do?">
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="city">City *</label>
+                    <input type="text" id="city" name="city" required 
+                           placeholder="e.g., New York">
+                </div>
+                <div class="form-group">
+                    <label for="state">State/Province (Optional)</label>
+                    <input type="text" id="state" name="state" 
+                           placeholder="e.g., NY">
+                </div>
+                <div class="form-group">
+                    <label for="country">Country *</label>
+                    <input type="text" id="country" name="country" required 
+                           placeholder="e.g., USA" value="US">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="taskDate">Date *</label>
+                    <input type="date" id="taskDate" name="taskDate" required 
+                           value="<%= new Date().toISOString().split('T')[0] %>">
+                </div>
+                <div class="form-group">
+                    <label for="taskTime">Time (Optional)</label>
+                    <input type="time" id="taskTime" name="taskTime">
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Add Task</button>
+                <a href="/tasks" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</body>
+</html>

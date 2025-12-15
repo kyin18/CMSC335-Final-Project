@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <link rel="stylesheet" href="/style.css">
+    <script>
+        async function checkWeather(taskId) {
+            const button = document.getElementById(`weather-btn-${taskId}`);
+            const resultDiv = document.getElementById(`weather-result-${taskId}`);
+            
+            button.innerHTML = 'Loading...';
+            button.disabled = true;
+            resultDiv.innerHTML = '<div class="loading">Fetching weather data...</div>';
+            
+            try {
+                const response = await fetch(`/weather/${taskId}`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    resultDiv.innerHTML = `
+                        <div class="weather-success">
+                            <h4>Weather in ${data.location}</h4>
+                            <div class="weather-details">
+                                <div class="weather-main">
+                                    <img src="${data.icon}" alt="${data.description}">
+                                    <div>
+                                        <div class="temp">${data.temp}°F</div>
+                                        <div class="desc">${data.description}</div>
+                                    </div>
+                                </div>
+                                <div class="weather-stats">
+                                    <div>Feels like: <strong>${data.feels_like}°F</strong></div>
+                                    <div>Humidity: <strong>${data.humidity}%</strong></div>
+                                    <div>Wind: <strong>${data.wind} m/s</strong></div>
+                                </div>
+                            </div>
+                            <div class="task-context">
+                                <small>For: ${data.task.activity} on ${data.task.date} ${data.task.time}</small>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <div class="weather-error">
+                            <h4>Weather Unavailable</h4>
+                            <p>${data.error || 'Could not fetch weather data'}</p>
+                            <small>Try checking the location format: City, Country</small>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="weather-error">
+                        <h4>Network Error</h4>
+                        <p>Failed to connect to weather service</p>
+                    </div>
+                `;
+            } finally {
+                button.innerHTML = 'Check Weather';
+                button.disabled = false;
+            }
+        }
+        
+        function toggleWeather(taskId) {
+            const resultDiv = document.getElementById(`weather-result-${taskId}`);
+            resultDiv.style.display = resultDiv.style.display === 'none' ? 'block' : 'none';
+        }
+    </script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>All Tasks</h1>
+            <div class="header-actions">
+                <a href="/" class="btn btn-secondary">Home</a>
+                <a href="/add" class="btn btn-primary">Add New Task</a>
+            </div>
+        </header>
+
+        <% if (tasks && tasks.length > 0) { %>
+            <div class="tasks-container">
+                <% tasks.forEach(task => { 
+                    const taskDate = new Date(task.taskDate);
+                    
+                    // For date comparison (ignoring time)
+                    const today = new Date();
+                    const todayDateOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+                    
+                    const taskDateOnly = new Date(taskDate.getFullYear(), taskDate.getMonth(), taskDate.getDate());
+                    
+                    const isToday = taskDateOnly.getTime() === todayDateOnly.getTime();
+                    const isPast = taskDateOnly < todayDateOnly && !isToday;
+                    
+                    // Format the date for display using UTC to avoid timezone issues
+                    const formattedDate = taskDate.toLocaleDateString('en-US', { 
+                        weekday: 'short', 
+                        month: 'short', 
+                        day: 'numeric',
+                        timeZone: 'UTC'
+                    });
+                %>
+                    <div class="task-card <%= isToday ? 'today' : '' %> <%= isPast ? 'past' : '' %>">
+                        <div class="task-main">
+                            <div class="task-info">
+                                <h3><%= task.activity %></h3>
+                                <div class="task-meta">
+                                    <span class="date">
+                                        Date: <%= formattedDate %>
+                                        <% if (task.taskTime) { %>
+                                            at <%= task.taskTime %>
+                                        <% } %>
+                                    </span>
+                                    <span class="location">
+                                        Location: <%= task.city %><% if (task.state) { %>, <%= task.state %><% } %>, <%= task.country %>
+                                    </span>
+                                </div>
+                            </div>
+                            
+                            <div class="task-actions">
+                                <button id="weather-btn-<%= task._id %>" 
+                                        class="btn btn-weather"
+                                        onclick="checkWeather('<%= task._id %>'); toggleWeather('<%= task._id %>')">
+                                    Check Weather
+                                </button>
+                                
+                                <form action="/delete/<%= task._id %>" method="POST" 
+                                      onsubmit="return confirm('Delete this task?')"
+                                      class="delete-form">
+                                    <button type="submit" class="btn btn-danger">Delete</button>
+                                </form>
+                            </div>
+                        </div>
+                        
+                        <div id="weather-result-<%= task._id %>" class="weather-result" style="display: none;"></div>
+                        
+                        <% if (isToday) { %>
+                            <div class="task-badge today-badge">Today</div>
+                        <% } else if (isPast) { %>
+                            <div class="task-badge past-badge">Past</div>
+                        <% } else { %>
+                            <div class="task-badge upcoming-badge">Upcoming</div>
+                        <% } %>
+                    </div>
+                <% }); %>
+            </div>
+        <% } else { %>
+            <div class="empty-state">
+                <h2>No Tasks Yet</h2>
+                <p>You haven't added any tasks yet. Create your first task to get started!</p>
+                <a href="/add" class="btn btn-primary">Add Your First Task</a>
+            </div>
+        <% } %>
+    </div>
+</body>
+</html>
