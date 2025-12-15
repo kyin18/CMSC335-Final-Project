@@ -69,25 +69,21 @@ app.post('/add', async (req, res) => {
             throw new Error('Database not connected');
         }
         
-        // Parse the date string (format: YYYY-MM-DD)
         const dateParts = req.body.taskDate.split('-');
         const year = parseInt(dateParts[0]);
-        const month = parseInt(dateParts[1]) - 1; // JS months are 0-indexed
+        const month = parseInt(dateParts[1]) - 1;
         const day = parseInt(dateParts[2]);
         
         let taskDateObj;
         
         if (req.body.taskTime) {
-            // If there's a time, parse it
             const timeParts = req.body.taskTime.split(':');
             const hours = parseInt(timeParts[0]);
             const minutes = parseInt(timeParts[1] || 0);
             
-            // Create date in UTC to avoid timezone issues
             taskDateObj = new Date(Date.UTC(year, month, day, hours, minutes));
             
         } else {
-            // If no time specified, store just the date at midnight UTC
             taskDateObj = new Date(Date.UTC(year, month, day));
         }
         
